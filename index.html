@@ -6,33 +6,39 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* 1. FOREGROUND BUBBLES */
+        /* 1. FOREGROUND BUBBLES (Always on top) */
         #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-        .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.7; border: 1px solid white; }
+        .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; border: 1px solid white; }
         @keyframes rise { 100% { transform: translateY(-110vh); } }
 
-        /* 2. CAMERA & GOAL BAR */
-        #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; z-index: 10; }
-        #camera-circle {
-            width: 240px; height: 240px; border-radius: 50%; border: 6px solid white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; background: #000;
+        /* 2. TOP HEADER (Lions on Left, Camera on Right) */
+        #header-zone {
+            width: 100%; height: 200px; display: flex; 
+            justify-content: space-between; align-items: center; 
+            padding: 0 20px; box-sizing: border-box; position: relative; z-index: 100;
+        }
+
+        #goal-bar {
+            display: flex; gap: 10px; background: rgba(255,255,255,0.6); 
+            padding: 10px; border-radius: 20px; backdrop-filter: blur(5px);
+        }
+        .goal-lion { width: 40px; height: 40px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
+        .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.2); }
+
+        #camera-bubble {
+            width: 140px; height: 140px; border-radius: 50%; 
+            border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+            overflow: hidden; background: #000;
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        #goal-bar {
-            position: absolute; top: 15px; display: flex; gap: 10px;
-            background: rgba(255,255,255,0.4); padding: 8px 15px; border-radius: 30px; backdrop-filter: blur(10px); z-index: 20;
-        }
-        .goal-lion { width: 35px; height: 35px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
-        .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.2); }
-
-        /* 3. LION PARADE (Under Camera) */
-        #lion-stage { position: absolute; top: 42vh; width: 100%; height: 0; overflow: visible; z-index: 500; }
+        /* 3. LION STAGE (Centered in Middle) */
+        #lion-stage { position: absolute; top: 35vh; width: 100%; height: 0; overflow: visible; z-index: 500; }
         .lion-wrap {
-            position: absolute; bottom: -200px; width: 120px; height: 120px;
+            position: absolute; bottom: -200px; width: 130px; height: 130px;
             transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .lion-up { bottom: -30px !important; }
+        .lion-up { bottom: 20px !important; }
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
         .mouth-on .img-1 { animation: swap 0.4s infinite; }
         .mouth-on .img-2 { animation: swap 0.4s infinite reverse; }
@@ -40,26 +46,30 @@
 
         /* 4. UI PANEL */
         .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .btn { width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: white; box-shadow: 0 5px 0 #5D4037; transition: 0.2s; }
+        .btn { 
+            width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; 
+            border-radius: 15px; font-weight: bold; font-size: 18px; background: white; 
+            box-shadow: 0 5px 0 #5D4037; transition: 0.1s; position: relative; overflow: hidden;
+        }
         
-        /* Telegraphing Styles */
-        .selected { background: #A2D2FF !important; transform: translateY(3px); box-shadow: 0 2px 0 #5D4037 !important; }
-        .correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; box-shadow: 0 5px 0 #2D6A4F !important; }
-        .wrong { background: #FFADAD !important; animation: shake 0.4s; }
-        @keyframes shake { 0%, 100% { transform:translateX(0); } 25% { transform:translateX(-10px); } 75% { transform:translateX(10px); } }
+        /* The Blue "Telegraph" State */
+        .btn.selected { background: #A2D2FF !important; color: white; transform: translateY(3px); box-shadow: 0 2px 0 #5D4037 !important; }
+        .btn.correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; box-shadow: 0 5px 0 #2D6A4F !important; }
+        .btn.wrong { background: #FFADAD !important; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform:translateX(0); } 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
     </style>
 </head>
 <body>
 
     <div id="bg-fx"></div>
 
-    <div id="top-zone">
+    <div id="header-zone">
         <div id="goal-bar">
             <img src="lion-1.png" id="g0" class="goal-lion">
             <img src="lion-1.png" id="g1" class="goal-lion">
             <img src="lion-1.png" id="g2" class="goal-lion">
         </div>
-        <div id="camera-circle">
+        <div id="camera-bubble">
             <video id="v" autoplay playsinline webkit-playsinline muted></video>
         </div>
     </div>
@@ -68,20 +78,20 @@
 
     <div class="ui-panel">
         <div id="start-screen">
-            <h1>Lion Dance Trivia</h1>
-            <button class="btn" onclick="init()">START PARADE</button>
+            <h1 style="color:#5D4037">Lion Parade</h1>
+            <button class="btn" onclick="init()">START GAME</button>
         </div>
         <div id="game-area" style="display:none">
-            <h2 id="question">Question?</h2>
+            <h2 id="question" style="margin-bottom:20px;">Question?</h2>
             <div id="options"></div>
         </div>
     </div>
 
 <script>
     const data = [
-        {q:"Which city is famous for the Dragon Bridge?", a:["Da Nang","Hue","Hanoi"], c:0},
-        {q:"What food is a VN baguette?", a:["Pho","Banh Mi","Com Tam"], c:1},
-        {q:"Color of the Vietnamese flag?", a:["Blue","Red & Yellow","Green"], c:1}
+        {q:"Which bridge in Da Nang breathes fire?", a:["Han River Bridge","Dragon Bridge","Tran Thi Ly"], c:1},
+        {q:"What color is the 'Lucky Envelope'?", a:["Yellow","Red","Blue"], c:1},
+        {q:"Is the Lion Dance for good luck?", a:["Yes","No","Maybe"], c:0}
     ];
 
     let currentQ = 0; let wins = 0;
@@ -93,6 +103,7 @@
         try {
             const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
             document.getElementById('v').srcObject = s;
+            document.getElementById('v').play();
             loadQ();
         } catch(e) { loadQ(); }
     }
@@ -111,16 +122,21 @@
     }
 
     function handle(btn, choice, right) {
-        // Disable buttons & show "Telegraph" highlight
+        // Prevent double clicking
         document.querySelectorAll('.btn').forEach(b => b.style.pointerEvents = 'none');
+        
+        // 1. Telegraphing: Turn blue immediately
         btn.classList.add('selected');
 
+        // 2. Delay for suspense
         setTimeout(() => {
             btn.classList.remove('selected');
             if(choice === right) {
                 btn.classList.add('correct');
-                document.getElementById(`g${wins}`).classList.add('active-goal');
-                wins++;
+                if(wins < 3) {
+                    document.getElementById(`g${wins}`).classList.add('active-goal');
+                    wins++;
+                }
                 celebrate();
             } else {
                 btn.classList.add('wrong');
@@ -129,17 +145,16 @@
                     document.querySelectorAll('.btn').forEach(b => b.style.pointerEvents = 'auto');
                 }, 800);
             }
-        }, 600);
+        }, 800);
     }
 
     function celebrate() {
         const stage = document.getElementById('lion-stage');
         stage.innerHTML = '';
-        // Spawn lions equal to current correct answers
         for(let i=0; i<wins; i++) {
             const w = document.createElement('div');
             w.className = 'lion-wrap mouth-on';
-            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 60px)`;
+            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 65px)`;
             w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
             stage.appendChild(w);
             setTimeout(() => w.classList.add('lion-up'), 100);
@@ -151,14 +166,13 @@
                 currentQ++;
                 if(currentQ < data.length) loadQ();
                 else {
-                    document.getElementById('question').innerText = "Parade Complete! 🦁🏆";
-                    document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">PLAY AGAIN</button>';
+                    document.getElementById('question').innerText = "Winner! 🏆";
+                    document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">REPLAY</button>';
                 }
             }, 600);
         }, 3000);
     }
 
-    // Front-layer bubbles
     setInterval(() => {
         const b = document.createElement('div');
         b.className = 'bubble';
@@ -169,7 +183,7 @@
         b.style.animationDuration = (Math.random()*3+2)+"s";
         document.getElementById('bg-fx').appendChild(b);
         setTimeout(() => b.remove(), 5000);
-    }, 400);
+    }, 450);
 </script>
 </body>
 </html>
