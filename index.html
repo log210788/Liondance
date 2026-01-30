@@ -6,9 +6,8 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* TOP SECTION WITH CIRCLE CAMERA */
+        /* THE CAMERA BOX */
         #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; }
-        
         #camera-circle {
             width: 240px; height: 240px;
             border-radius: 50%; border: 6px solid white;
@@ -18,11 +17,11 @@
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
         /* UI PANEL */
-        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 30px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .btn { width: 100%; padding: 20px; border: 3px solid #5D4037; border-radius: 20px; font-weight: bold; font-size: 20px; background: #FFF; box-shadow: 0 6px 0 #5D4037; }
-        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #5D4037; }
+        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .btn { width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: #FFF; box-shadow: 0 5px 0 #5D4037; }
         
-        #game-content { display: none; } /* Hidden until camera starts */
+        #game-area { display: none; }
+        h1 { font-size: 22px; color: #5D4037; }
     </style>
 </head>
 <body>
@@ -35,48 +34,70 @@
 
     <div class="ui-panel">
         <div id="start-screen">
-            <h1>Ready to Dance?</h1>
-            <p>Tap below to see yourself in the parade!</p>
-            <button class="btn" onclick="initGame()">JOIN THE PARADE</button>
+            <h1>Lion Dance Game</h1>
+            <p>Tap to start your camera and play!</p>
+            <button class="btn" onclick="runEverything()">START GAME</button>
         </div>
 
-        <div id="game-content">
-            <h2 id="q-text">Loading Questions...</h2>
+        <div id="game-area">
+            <h2 id="question">Loading...</h2>
             <div id="options"></div>
         </div>
     </div>
 
 <script>
-    // 1. Unlocks Camera & Audio for iPhone
-    async function initGame() {
+    // Game Data
+    const quiz = [
+        {q: "Where are you playing?", a: ["Hanoi", "Da Nang"], c: 1},
+        {q: "Is this a Lion Dance?", a: ["Yes", "No"], c: 0}
+    ];
+    let currentIdx = 0;
+
+    async function runEverything() {
+        // 1. Start Camera
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: false 
-            });
-            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             const video = document.getElementById('v');
             video.srcObject = stream;
-            
-            // Critical for Safari: explicitly call .play()
-            video.play();
-
-            // Hide start screen, show game
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-content').style.display = 'block';
-            
-            startGame(); 
+            await video.play();
         } catch (err) {
-            alert("To play, please allow camera access when prompted!");
-            console.error(err);
+            console.log("Camera error:", err);
+            alert("Please allow camera access!");
         }
+
+        // 2. Switch Screens
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+
+        // 3. Load First Question
+        showQuestion();
     }
 
-    // 2. Simple Game Logic
-    function startGame() {
-        document.getElementById('q-text').innerText = "Which city are you in?";
-        const opt = document.getElementById('options');
-        opt.innerHTML = '<button class="btn" onclick="alert(\'Correct!\')">Đà Nẵng</button>';
+    function showQuestion() {
+        const item = quiz[currentIdx];
+        document.getElementById('question').innerText = item.q;
+        const btnZone = document.getElementById('options');
+        btnZone.innerHTML = '';
+
+        item.a.forEach((text, i) => {
+            const b = document.createElement('button');
+            b.className = 'btn';
+            b.innerText = text;
+            b.onclick = () => {
+                if(i === item.c) {
+                    currentIdx++;
+                    if(currentIdx < quiz.length) {
+                        showQuestion();
+                    } else {
+                        document.getElementById('question').innerText = "You Won! 🦁";
+                        btnZone.innerHTML = '';
+                    }
+                } else {
+                    alert("Try again!");
+                }
+            };
+            btnZone.appendChild(b);
+        });
     }
 </script>
 </body>
