@@ -12,30 +12,56 @@
         .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; border: 1px solid white; }
         @keyframes rise { 100% { transform: translateY(-110vh); } }
 
-        /* HEADER & CAMERA */
+        /* HEADER & CENTRAL CAMERA */
         #header-zone {
-            width: 100%; height: 140px; display: flex; 
-            justify-content: space-between; align-items: flex-start; 
-            padding: 20px; box-sizing: border-box; position: relative; z-index: 50;
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px 0; 
+            box-sizing: border-box; 
+            position: relative; 
+            z-index: 50;
         }
-        #goal-bar { display: flex; gap: 8px; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); }
-        .goal-lion { width: 35px; height: 35px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
-        .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.2); }
 
-        #camera-bubble { width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; background: #000; }
+        /* Centered and Larger Camera */
+        #camera-bubble { 
+            width: 180px; 
+            height: 180px; 
+            border-radius: 50%; 
+            border: 6px solid white; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15), 0 0 20px rgba(255,255,255,0.5); 
+            overflow: hidden; 
+            background: #000;
+            margin-bottom: 15px;
+            position: relative;
+        }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* LION STAGE - THE HIGHEST LAYER FOR VISUALS */
+        #goal-bar { 
+            display: flex; 
+            gap: 12px; 
+            background: rgba(255,255,255,0.7); 
+            padding: 8px 15px; 
+            border-radius: 25px; 
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .goal-lion { width: 30px; height: 30px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
+        .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.3); }
+
+        /* LION STAGE - ABSOLUTE TOP */
         #lion-stage { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            pointer-events: none; /* Allows user to click buttons through this layer */
+            pointer-events: none; 
             z-index: 9999; 
         }
         .lion-wrap {
-            position: absolute; bottom: -220px; width: 180px; height: 180px;
+            position: absolute; bottom: -220px; width: 160px; height: 160px;
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .lion-up { transform: translateY(-75vh); } 
+        /* Adjusted to jump specifically toward the camera area */
+        .lion-up { transform: translateY(-70vh); } 
         
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; }
         .mouth-on .img-1 { animation: swap 0.4s infinite; }
@@ -47,7 +73,7 @@
             margin-top: auto; 
             background: white; 
             border-radius: 40px 40px 0 0; 
-            padding: 20px 25px 40px 25px; 
+            padding: 25px 25px 40px 25px; 
             z-index: 100; 
             box-shadow: 0 -10px 30px rgba(0,0,0,0.1); 
             text-align: center;
@@ -71,24 +97,24 @@
     <div id="bg-fx"></div>
 
     <div id="header-zone">
+        <div id="camera-bubble">
+            <video id="v" autoplay playsinline muted></video>
+        </div>
         <div id="goal-bar">
             <img src="lion-1.png" id="g0" class="goal-lion">
             <img src="lion-1.png" id="g1" class="goal-lion">
             <img src="lion-1.png" id="g2" class="goal-lion">
         </div>
-        <div id="camera-bubble">
-            <video id="v" autoplay playsinline muted></video>
-        </div>
     </div>
 
     <div class="ui-panel">
         <div id="start-screen">
-            <h1 style="color:#5D4037; margin:0 0 10px 0; font-size: 24px;">Lion Parade</h1>
-            <p style="color:#8D6E63; margin-bottom: 20px;">Win to see the lions dance!</p>
+            <h1 style="color:#5D4037; margin:0 0 10px 0; font-size: 26px;">Lion Parade</h1>
+            <p style="color:#8D6E63; margin-bottom: 25px; font-size: 16px;">Win to see the lions dance!</p>
             <button class="btn" onclick="init()">START GAME</button>
         </div>
         <div id="game-area" style="display:none">
-            <h2 id="question" style="font-size: 18px; margin-bottom: 15px; color: #5D4037;">Question?</h2>
+            <h2 id="question" style="font-size: 20px; margin-bottom: 20px; color: #5D4037;">Question?</h2>
             <div id="options"></div>
         </div>
     </div>
@@ -109,18 +135,16 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-area').style.display = 'block';
         
-        // Start camera on user gesture (the button click)
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
+                    video: { facingMode: "user", width: 400, height: 400 } 
                 });
                 const v = document.getElementById('v');
                 v.srcObject = stream;
-                // Some browsers require explicit play()
                 v.onloadedmetadata = () => v.play();
             } catch (e) {
-                console.warn("Camera access denied or unavailable.");
+                console.warn("Camera access denied.");
             }
         }
         loadQ();
@@ -169,11 +193,9 @@
         for(let i=0; i<wins; i++) {
             const w = document.createElement('div');
             w.className = 'lion-wrap mouth-on';
-            // Space lions out based on current win count
-            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 90px)`;
+            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 80px)`;
             w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2" style="opacity:0">`;
             stage.appendChild(w);
-            // Trigger animation
             setTimeout(() => w.classList.add('lion-up'), 50);
         }
 
@@ -191,7 +213,6 @@
         }, 3000);
     }
 
-    // Background Bubbles
     setInterval(() => {
         const b = document.createElement('div');
         b.className = 'bubble';
