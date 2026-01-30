@@ -6,60 +6,57 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* 1. BUBBLES (Very Front) */
+        /* BUBBLES - VERY FRONT */
         #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10000; }
         .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; border: 1px solid white; }
         @keyframes rise { 100% { transform: translateY(-110vh); } }
 
-        /* 2. HEADER (Lions Left, Camera Right) */
+        /* HEADER */
         #header-zone {
-            width: 100%; height: 180px; display: flex; 
+            width: 100%; height: 160px; display: flex; 
             justify-content: space-between; align-items: flex-start; 
             padding: 20px; box-sizing: border-box; position: relative; z-index: 10;
         }
-
-        #goal-bar {
-            display: flex; gap: 8px; background: rgba(255,255,255,0.6); 
-            padding: 10px; border-radius: 20px; backdrop-filter: blur(5px);
-        }
+        #goal-bar { display: flex; gap: 8px; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); }
         .goal-lion { width: 35px; height: 35px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
         .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.2); }
 
-        #camera-bubble {
-            width: 160px; height: 160px; border-radius: 50%; 
-            border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
-            overflow: hidden; background: #000;
-        }
+        #camera-bubble { width: 130px; height: 130px; border-radius: 50%; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* 3. LION STAGE (FOREGROUND - Z-INDEX 5000) */
+        /* LION STAGE - HIGHEST Z-INDEX */
         #lion-stage { 
-            position: absolute; 
+            position: fixed; 
             top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            overflow: visible; 
-            z-index: 5000; /* This puts them in front of the camera and UI */
-            pointer-events: none; /* Allows you to still click buttons behind them */
+            width: 100vw; height: 100vh; 
+            pointer-events: none; 
+            z-index: 9000; /* Higher than UI panel */
         }
         .lion-wrap {
-            position: absolute; bottom: -200px; width: 160px; height: 160px;
-            transition: bottom 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; 
+            bottom: -180px; /* Start below the screen */
+            width: 180px; height: 180px;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .lion-up { bottom: 30vh !important; } /* Jumps up into the middle of the screen */
+        /* Instead of just 'bottom', we use transform to leap them over the UI */
+        .lion-up { transform: translateY(-55vh); } 
         
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
         .mouth-on .img-1 { animation: swap 0.4s infinite; }
         .mouth-on .img-2 { animation: swap 0.4s infinite reverse; }
         @keyframes swap { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
-        /* 4. UI PANEL */
-        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .btn { 
-            width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; 
-            border-radius: 15px; font-weight: bold; font-size: 18px; background: white; 
-            box-shadow: 0 5px 0 #5D4037; transition: 0.1s; position: relative;
+        /* UI PANEL */
+        .ui-panel { 
+            margin-top: auto; 
+            background: white; 
+            border-radius: 40px 40px 0 0; 
+            padding: 30px; 
+            z-index: 100; /* Lower than lions */
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1); 
+            text-align: center; 
         }
-        
+        .btn { width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: white; box-shadow: 0 5px 0 #5D4037; transition: 0.1s; }
         .btn.selected { background: #A2D2FF !important; transform: translateY(3px); box-shadow: 0 2px 0 #5D4037 !important; }
         .btn.correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; }
         .btn.wrong { background: #FFADAD !important; animation: shake 0.4s; }
@@ -85,7 +82,7 @@
 
     <div class="ui-panel">
         <div id="start-screen">
-            <h1 style="color:#5D4037">Lion Parade</h1>
+            <h1 style="color:#5D4037; margin-top:0;">Lion Parade</h1>
             <button class="btn" onclick="init()">START GAME</button>
         </div>
         <div id="game-area" style="display:none">
@@ -158,10 +155,12 @@
         for(let i=0; i<wins; i++) {
             const w = document.createElement('div');
             w.className = 'lion-wrap mouth-on';
-            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 80px)`;
+            // Space them out horizontally
+            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 90px)`;
             w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
             stage.appendChild(w);
-            setTimeout(() => w.classList.add('lion-up'), 100);
+            // Small delay to trigger the leap
+            setTimeout(() => w.classList.add('lion-up'), 50);
         }
 
         setTimeout(() => {
