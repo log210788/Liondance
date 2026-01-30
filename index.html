@@ -11,89 +11,63 @@
             --accent-color: #5D4037;
         }
 
-        /* Fix for mobile clipping */
         html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            height: 100dvh; 
-            background: var(--bg-color);
-            overflow: hidden;
+            margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh; 
+            background: var(--bg-color); overflow: hidden;
         }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
+        body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
 
         #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10001; }
         .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; border: 1px solid white; }
         @keyframes rise { 100% { transform: translateY(-110vh); } }
 
-        /* HEADER AREA - Expands to fill space */
         #header-zone {
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; /* Centers video in available space */
-            align-items: center; 
-            padding: 10px;
-            z-index: 50;
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; padding: 10px; z-index: 50;
         }
 
-        /* MASSIVE CAMERA */
+        /* MAXIMIZED VIDEO */
         #camera-bubble { 
-            width: 280px; 
-            height: 280px; 
-            max-width: 70vw;
-            max-height: 70vw;
-            border-radius: 50%; 
-            border: 8px solid white; 
+            width: 280px; height: 280px; max-width: 75vw; max-height: 75vw;
+            border-radius: 50%; border: 8px solid white; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-            overflow: hidden; 
-            background: #000;
-            position: relative;
+            overflow: hidden; background: #000; position: relative;
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
         #goal-bar { 
-            margin-top: 15px;
-            display: flex; 
-            gap: 15px; 
-            background: rgba(255,255,255,0.8); 
-            padding: 8px 20px; 
-            border-radius: 30px; 
-            backdrop-filter: blur(10px);
+            margin-top: 15px; display: flex; gap: 12px; 
+            background: rgba(255,255,255,0.8); padding: 8px 18px; 
+            border-radius: 30px; backdrop-filter: blur(10px);
         }
         .goal-lion { width: 28px; height: 28px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
         .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.3); }
 
-        /* LIONS AT THE VERY FRONT */
-        #lion-stage { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            pointer-events: none; 
-            z-index: 9999; 
-        }
+        /* LION STAGE - MOUTH ANIMATION LOGIC */
+        #lion-stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; }
         .lion-wrap {
-            position: absolute; bottom: -200px; width: 180px; height: 180px;
+            position: absolute; bottom: -220px; width: 180px; height: 180px;
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .lion-up { transform: translateY(-70vh); } 
+        .lion-up { transform: translateY(-72vh); } 
+        
+        /* The mouth-moving trick */
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; }
+        .img-open { opacity: 0; animation: mouthToggle 0.4s infinite; }
+        .img-closed { opacity: 1; animation: mouthToggle 0.4s infinite reverse; }
 
-        /* UI PANEL - PROTECTED BOTTOM */
+        @keyframes mouthToggle {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        /* UI PANEL */
         .ui-panel { 
-            background: var(--panel-color); 
-            border-radius: 40px 40px 0 0; 
-            padding: 25px 25px;
-            /* Extra padding for mobile home bars */
-            padding-bottom: calc(40px + env(safe-area-inset-bottom)); 
-            z-index: 100; 
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1); 
-            text-align: center;
-            flex-shrink: 0; /* Prevents the panel itself from being squished */
+            background: var(--panel-color); border-radius: 40px 40px 0 0; 
+            padding: 25px 25px calc(30px + env(safe-area-inset-bottom)); 
+            z-index: 100; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); 
+            text-align: center; flex-shrink: 0;
         }
 
         .btn { 
@@ -150,16 +124,14 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-area').style.display = 'block';
         
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: 640, height: 640 } 
-                });
-                const v = document.getElementById('v');
-                v.srcObject = stream;
-                v.play();
-            } catch (e) { console.warn("Camera error"); }
-        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: 640, height: 640 } 
+            });
+            const v = document.getElementById('v');
+            v.srcObject = stream;
+            v.play();
+        } catch (e) { console.warn("Camera check: blocked or not available"); }
         loadQ();
     }
 
@@ -207,7 +179,11 @@
             const w = document.createElement('div');
             w.className = 'lion-wrap';
             w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 90px)`;
-            w.innerHTML = `<img src="lion-1.png" class="lion-img">`;
+            // Double images (lion-1 and lion-2) to create the talking mouth effect
+            w.innerHTML = `
+                <img src="lion-1.png" class="lion-img img-closed">
+                <img src="lion-2.png" class="lion-img img-open">
+            `;
             stage.appendChild(w);
             setTimeout(() => w.classList.add('lion-up'), 50);
         }
@@ -222,7 +198,7 @@
                     document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">REPLAY</button>';
                 }
             }, 800);
-        }, 2500);
+        }, 2800);
     }
 
     setInterval(() => {
