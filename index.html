@@ -6,37 +6,46 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* 1. CAMERA CIRCLE */
-        #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; }
+        /* 1. THE BUBBLES (Z-index 9999 to be in the very front) */
+        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.7; border: 1px solid rgba(255,255,255,0.5); }
+        @keyframes rise { 100% { transform: translateY(-110vh); } }
+
+        /* 2. CAMERA CIRCLE */
+        #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; z-index: 10; }
         #camera-circle {
             width: 250px; height: 250px;
             border-radius: 50%; border: 6px solid white;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden; background: #000; z-index: 10;
+            overflow: hidden; background: #000;
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* 2. LION ANIMATIONS */
-        #lion-stage { position: absolute; top: 45vh; width: 100%; height: 0; overflow: visible; z-index: 50; }
-        .lion-wrap {
-            position: absolute; bottom: -150px; width: 140px; height: 140px;
-            transition: bottom 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* 3. LION STAGE (Positioned exactly under camera) */
+        #lion-stage { 
+            position: absolute; 
+            top: 40vh; /* Moved up to sit just under the circle */
+            width: 100%; 
+            height: 0; 
+            overflow: visible; 
+            z-index: 500; 
         }
+        .lion-wrap {
+            position: absolute; bottom: -200px; width: 130px; height: 130px;
+            transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        /* Adjusted the jump height to sit right under the bubble */
+        .lion-up { bottom: -40px !important; } 
+        
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
-        .lion-up { bottom: 40px !important; }
         .mouth-active .img-1 { animation: mouth 0.4s infinite; }
         .mouth-active .img-2 { animation: mouth 0.4s infinite reverse; }
         @keyframes mouth { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
-        /* 3. BUBBLE ANIMATIONS */
-        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; }
-        @keyframes rise { 100% { transform: translateY(-110vh); } }
-
         /* 4. UI PANEL */
-        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
         .btn { width: 100%; padding: 20px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 20px; font-weight: bold; font-size: 20px; background: #FFF; box-shadow: 0 6px 0 #5D4037; }
-        .correct { background: #B9FBC0 !important; }
+        .correct { background: #B9FBC0 !important; border-color: #2D6A4F; box-shadow: 0 6px 0 #2D6A4F; }
         
         #game-area { display: none; }
     </style>
@@ -60,10 +69,9 @@
         </div>
 
         <div id="game-area">
-            <h2 id="q-text">Is Đà Nẵng the city of bridges?</h2>
+            <h2 id="q-text">Tap the button to call the lions!</h2>
             <div id="options">
-                <button class="btn" onclick="win(this)">YES! 🦁</button>
-                <button class="btn" onclick="location.reload()">NO</button>
+                <button class="btn" id="win-btn" onclick="win(this)">DANCE! 🦁</button>
             </div>
         </div>
     </div>
@@ -80,29 +88,41 @@
             const video = document.getElementById('v');
             video.srcObject = stream;
             video.play();
-        } catch (e) {} // Removed system alert
+        } catch (e) {}
     }
 
     function win(btn) {
         btn.classList.add('correct');
-        document.getElementById('q-text').innerText = "Look at the Lions!";
+        btn.disabled = true;
         
-        // Spawn Lions
         const stage = document.getElementById('lion-stage');
+        stage.innerHTML = ''; // Clear old lions
+        
+        // Spawn 3 Lions
         for(let i=0; i<3; i++) {
             const w = document.createElement('div');
             w.className = 'lion-wrap mouth-active';
-            w.style.left = `calc(${(100/4)*(i+1)}% - 70px)`;
+            // Space them out centered under the camera
+            w.style.left = `calc(${(100/4)*(i+1)}% - 65px)`;
             w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
             stage.appendChild(w);
+            
+            // Trigger the jump
             setTimeout(() => w.classList.add('lion-up'), 100);
         }
+
+        // Reset button after 4 seconds
+        setTimeout(() => {
+            btn.classList.remove('correct');
+            btn.disabled = false;
+            document.querySelectorAll('.lion-wrap').forEach(l => l.classList.remove('lion-up'));
+        }, 4000);
     }
 
     function makeBubble() {
         const b = document.createElement('div');
         b.className = 'bubble';
-        const s = Math.random() * 20 + 15;
+        const s = Math.random() * 25 + 15;
         b.style.width = b.style.height = s + "px";
         b.style.left = Math.random() * 100 + "vw";
         b.style.background = colors[Math.floor(Math.random()*colors.length)];
@@ -110,7 +130,7 @@
         document.getElementById('bg-fx').appendChild(b);
         setTimeout(() => b.remove(), 5000);
     }
-    setInterval(makeBubble, 600);
+    setInterval(makeBubble, 400); // More frequent bubbles
 </script>
 </body>
 </html>
