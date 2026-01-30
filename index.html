@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <style>
+        body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+        
+        /* THE CAMERA BOX (Locked at the top) */
+        #camera-container {
+            position: relative;
+            width: 100%;
+            height: 40vh;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        /* iOS-Specific Video Fix */
+        #video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            pointer-events: none; /* Prevents long-press menu on video */
+        }
+
+        /* GOAL BAR WITH SHINE & GLOW */
+        #goal-bar {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; z-index: 20; background: rgba(255,255,255,0.3);
+            padding: 10px 20px; border-radius: 40px; backdrop-filter: blur(10px);
+        }
+        .goal-wrapper { position: relative; width: 45px; height: 45px; overflow: hidden; border-radius: 50%; }
+        .goal-lion { 
+            width: 100%; height: 100%; object-fit: contain; 
+            filter: grayscale(1) opacity(0.4); transition: 0.5s ease; 
+        }
+        .active-goal .goal-lion { 
+            filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; 
+            transform: scale(1.1); 
+        }
+        /* Shine effect */
+        .active-goal::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: shine 0.6s forwards;
+        }
+        @keyframes shine { 100% { left: 100%; } }
+
+        /* LION PARADE (Below Camera) */
+        #lion-stage { position: absolute; top: 40vh; width: 100%; height: 0; overflow: visible; z-index: 500; }
+        .lion-wrap {
+            position: absolute; bottom: -20px; width: 120px; height: 120px;
+            transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+        .lion-up { bottom: 30px !important; }
+        .mouth-on .img-1 { animation: swap 0.4s infinite; }
+        .mouth-on .img-2 { animation: swap 0.4s infinite reverse; }
+        @keyframes swap { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+        /* GAME UI */
+        .ui-panel { flex: 1; background:#FFF; border-radius: 30px 30px 0 0; padding: 25px; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); position: relative; }
+        .btn { 
+            width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; 
+            border-radius: 20px; font-weight: bold; font-size: 18px; background: white; 
+            transition: 0.2s; box-shadow: 0 6px 0 #5D4037; 
+        }
+        /* Suspense Highlight */
+        .selected { background: #A2D2FF !important; transform: translateY(3px); box-shadow: 0 3px 0 #5D4037 !important; }
+        .correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; box-shadow: 0 4px 0 #2D6A4F !important; }
+        .wrong { background: #FFADAD !important; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* BUBBLES & CONFETTI */
+        #fx-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; pointer-events: none; }
+        .b { position: absolute; border-radius: 50%; bottom: -50px; animation: fly linear forwards; border: 1px solid white; }
+        @keyframes fly { 100% { transform: translateY(-110vh); } }
+        .confetti { position: absolute; width: 10px; height: 10px; animation: drop 3s linear forwards; }
+        @keyframes drop { 0% { transform: translateY(-50px) rotate(0); } 100% { transform: translateY(110vh) rotate(720deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="camera-container">
+        <video id="video-feed" autoplay playsinline webkit-playsinline muted></video>
+        
+        <div id="goal-bar">
+            <div class="goal-wrapper" id="g0"><img src="lion-1.png" class="goal-lion"></div>
+            <div class="goal-wrapper" id="g1"><img src="lion-1.png" class="goal-lion"></div>
+            <div class="goal-wrapper" id="g2"><img src="lion-1.png" class="goal-lion"></div>
+        </div>
+    </div>
+
+    <div id="lion-stage"></div>
+    <div id="fx-layer"></div>
+
+    <div class="ui-panel">
+        <h1 id="q-text" style="text-align:center; font-size: 20px; margin-top: 0;">Tap Start to Begin</h1>
+        <div id="btn-zone">
+            <button class="btn" onclick="initApp()">Start Camera & Game</button>
+        </div>
+    </div>
+
+<script>
+    const data = [
+        {q:"City of Bridges?", a:["Đà Nẵng","Huế","Hà Nội"], c:0},
+        {q:"What is 'Bread' in VN?", a:["Phở","Bánh Mì","Bún Chả"], c:1},
+        {q:"Traditional Dress?", a:["Áo Dài","Kimono","Hanbok"], c:0}
+    ];
+
+    let currentQ = 0; let wins = 0;
+    const colors = ["#FFB7B2", "#FFD700", "#FF4D4D", "#B2E2F2"];
+
+    async function initApp() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: false 
+            });
+            const video = document.getElementById('video-feed');
+            video.srcObject = stream;
+            // Safari needs play() called explicitly after source is set
+            video.play();
+            loadQuestion();
+        } catch (e) {
+            alert("Please allow camera access to play!");
+        }
+    }
+
+    function loadQuestion() {
+        const item = data[currentQ];
+        document.getElementById('q-text').innerText = item.q;
+        const zone = document.getElementById('btn-zone');
+        zone.innerHTML = '';
+        
+        item.a.forEach((text, i) => {
+            const b = document.createElement('button');
+            b.className = 'btn'; b.innerText = text;
+            b.onclick = () => handleChoice(b, i, item.c);
+            zone.appendChild(b);
+        });
+    }
+
+    function handleChoice(btn, picked, right) {
+        document.querySelectorAll('.btn').forEach(b => b.style.pointerEvents = 'none');
+        btn.classList.add('selected');
+
+        // Short suspense highlight before reveal
+        setTimeout(() => {
+            btn.classList.remove('selected');
+            if(picked === right) {
+                btn.classList.add('correct');
+                document.getElementById(`g${wins}`).classList.add('active-goal');
+                wins++;
+                showCelebration();
+            } else {
+                btn.classList.add('wrong');
+                setTimeout(() => {
+                    btn.classList.remove('wrong');
+                    document.querySelectorAll('.btn').forEach(b => b.style.pointerEvents = 'auto');
+                }, 800);
+            }
+        }, 800);
+    }
+
+    function showCelebration() {
+        const stage = document.getElementById('lion-stage');
+        stage.innerHTML = '';
+        
+        // Spawn lions based on current wins
+        for(let i=0; i<wins; i++) {
+            const w = document.createElement('div');
+            w.className = 'lion-wrap mouth-on';
+            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 60px)`;
+            w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
+            stage.appendChild(w);
+            setTimeout(() => w.classList.add('lion-up'), 100);
+        }
+
+        // Burst of front-layer bubbles
+        for(let j=0; j<30; j++) setTimeout(makeBubble, j*40);
+
+        setTimeout(() => {
+            document.querySelectorAll('.lion-wrap').forEach(l => l.classList.remove('lion-up'));
+            setTimeout(() => {
+                currentQ++;
+                if(currentQ < data.length) {
+                    loadQuestion();
+                } else {
+                    document.getElementById('q-text').innerText = "Parade Master! 🎉";
+                    document.getElementById('btn-zone').innerHTML = '<button class="btn" onclick="location.reload()">Play Again</button>';
+                    launchConfetti();
+                }
+                stage.innerHTML = '';
+            }, 700);
+        }, 3000);
+    }
+
+    function makeBubble() {
+        const b = document.createElement('div');
+        b.className = 'b';
+        const s = Math.random() * 20 + 15;
+        b.style.width = b.style.height = s + "px";
+        b.style.left = Math.random() * 100 + "vw";
+        b.style.background = colors[Math.floor(Math.random()*colors.length)];
+        b.style.animationDuration = (Math.random()*2 + 2) + "s";
+        document.getElementById('fx-layer').appendChild(b);
+        setTimeout(() => b.remove(), 4000);
+    }
+
+    function launchConfetti() {
+        for(let i=0; i<80; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + "vw";
+            c.style.background = colors[Math.floor(Math.random()*colors.length)];
+            c.style.animationDelay = (Math.random() * 2) + "s";
+            document.getElementById('fx-layer').appendChild(c);
+        }
+    }
+    
+    // Constant background bubbles
+    setInterval(makeBubble, 900);
+</script>
+</body>
+</html>
