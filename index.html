@@ -6,25 +6,44 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* 1. TOP CAMERA CIRCLE */
+        /* 1. CAMERA CIRCLE */
         #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; }
         #camera-circle {
-            width: 240px; height: 240px;
+            width: 250px; height: 250px;
             border-radius: 50%; border: 6px solid white;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             overflow: hidden; background: #000; z-index: 10;
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* 2. UI PANEL */
+        /* 2. LION ANIMATIONS */
+        #lion-stage { position: absolute; top: 45vh; width: 100%; height: 0; overflow: visible; z-index: 50; }
+        .lion-wrap {
+            position: absolute; bottom: -150px; width: 140px; height: 140px;
+            transition: bottom 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+        .lion-up { bottom: 40px !important; }
+        .mouth-active .img-1 { animation: mouth 0.4s infinite; }
+        .mouth-active .img-2 { animation: mouth 0.4s infinite reverse; }
+        @keyframes mouth { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+        /* 3. BUBBLE ANIMATIONS */
+        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; }
+        @keyframes rise { 100% { transform: translateY(-110vh); } }
+
+        /* 4. UI PANEL */
         .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .btn { width: 100%; padding: 20px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: #FFF; box-shadow: 0 5px 0 #5D4037; }
+        .btn { width: 100%; padding: 20px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 20px; font-weight: bold; font-size: 20px; background: #FFF; box-shadow: 0 6px 0 #5D4037; }
+        .correct { background: #B9FBC0 !important; }
         
-        /* HIDDEN BY DEFAULT */
         #game-area { display: none; }
     </style>
 </head>
 <body>
+
+    <div id="bg-fx"></div>
 
     <div id="top-zone">
         <div id="camera-circle">
@@ -32,50 +51,66 @@
         </div>
     </div>
 
+    <div id="lion-stage"></div>
+
     <div class="ui-panel">
         <div id="start-screen">
-            <h1>Lion Dance Game</h1>
-            <p>Tap to start your camera and the parade!</p>
-            <button class="btn" onclick="startEverything()">START GAME</button>
+            <h1 style="color:#5D4037">Lion Dance Game</h1>
+            <button class="btn" onclick="start()">JOIN PARADE</button>
         </div>
 
         <div id="game-area">
-            <h2 id="q-text">Are you ready?</h2>
+            <h2 id="q-text">Is Đà Nẵng the city of bridges?</h2>
             <div id="options">
-                <button class="btn" onclick="next()">YES! 🦁</button>
+                <button class="btn" onclick="win(this)">YES! 🦁</button>
+                <button class="btn" onclick="location.reload()">NO</button>
             </div>
         </div>
     </div>
 
 <script>
-    // Variables
-    const video = document.getElementById('v');
-    const startScreen = document.getElementById('start-screen');
-    const gameArea = document.getElementById('game-area');
+    const colors = ["#FFB7B2", "#FFD700", "#FF4D4D", "#B2E2F2"];
 
-    async function startEverything() {
-        // Step 1: Force the UI to change immediately so we know the button worked
-        startScreen.style.display = 'none';
-        gameArea.style.display = 'block';
-
-        // Step 2: Request Camera
+    async function start() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+        
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" } 
-            });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            const video = document.getElementById('v');
             video.srcObject = stream;
-            // Explicit play for Safari
             video.play();
-        } catch (err) {
-            console.error(err);
-            alert("Camera needed for the game!");
+        } catch (e) {} // Removed system alert
+    }
+
+    function win(btn) {
+        btn.classList.add('correct');
+        document.getElementById('q-text').innerText = "Look at the Lions!";
+        
+        // Spawn Lions
+        const stage = document.getElementById('lion-stage');
+        for(let i=0; i<3; i++) {
+            const w = document.createElement('div');
+            w.className = 'lion-wrap mouth-active';
+            w.style.left = `calc(${(100/4)*(i+1)}% - 70px)`;
+            w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
+            stage.appendChild(w);
+            setTimeout(() => w.classList.add('lion-up'), 100);
         }
     }
 
-    function next() {
-        document.getElementById('q-text').innerText = "Look at the camera and dance!";
-        document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">RESTART</button>';
+    function makeBubble() {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 15;
+        b.style.width = b.style.height = s + "px";
+        b.style.left = Math.random() * 100 + "vw";
+        b.style.background = colors[Math.floor(Math.random()*colors.length)];
+        b.style.animationDuration = (Math.random()*3 + 2) + "s";
+        document.getElementById('bg-fx').appendChild(b);
+        setTimeout(() => b.remove(), 5000);
     }
+    setInterval(makeBubble, 600);
 </script>
 </body>
 </html>
