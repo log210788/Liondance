@@ -6,55 +6,62 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* 1. FOREGROUND BUBBLES (Always on top) */
-        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        /* 1. BUBBLES (Very Front) */
+        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10000; }
         .bubble { position: absolute; border-radius: 50%; bottom: -50px; animation: rise linear forwards; opacity: 0.6; border: 1px solid white; }
         @keyframes rise { 100% { transform: translateY(-110vh); } }
 
-        /* 2. TOP HEADER (Lions on Left, Camera on Right) */
+        /* 2. HEADER (Lions Left, Camera Right) */
         #header-zone {
-            width: 100%; height: 200px; display: flex; 
-            justify-content: space-between; align-items: center; 
-            padding: 0 20px; box-sizing: border-box; position: relative; z-index: 100;
+            width: 100%; height: 180px; display: flex; 
+            justify-content: space-between; align-items: flex-start; 
+            padding: 20px; box-sizing: border-box; position: relative; z-index: 10;
         }
 
         #goal-bar {
-            display: flex; gap: 10px; background: rgba(255,255,255,0.6); 
+            display: flex; gap: 8px; background: rgba(255,255,255,0.6); 
             padding: 10px; border-radius: 20px; backdrop-filter: blur(5px);
         }
-        .goal-lion { width: 40px; height: 40px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
+        .goal-lion { width: 35px; height: 35px; filter: grayscale(1) opacity(0.3); transition: 0.5s; }
         .active-goal { filter: grayscale(0) opacity(1) drop-shadow(0 0 8px gold) !important; transform: scale(1.2); }
 
         #camera-bubble {
-            width: 140px; height: 140px; border-radius: 50%; 
+            width: 160px; height: 160px; border-radius: 50%; 
             border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
             overflow: hidden; background: #000;
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* 3. LION STAGE (Centered in Middle) */
-        #lion-stage { position: absolute; top: 35vh; width: 100%; height: 0; overflow: visible; z-index: 500; }
-        .lion-wrap {
-            position: absolute; bottom: -200px; width: 130px; height: 130px;
-            transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* 3. LION STAGE (FOREGROUND - Z-INDEX 5000) */
+        #lion-stage { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            overflow: visible; 
+            z-index: 5000; /* This puts them in front of the camera and UI */
+            pointer-events: none; /* Allows you to still click buttons behind them */
         }
-        .lion-up { bottom: 20px !important; }
+        .lion-wrap {
+            position: absolute; bottom: -200px; width: 160px; height: 160px;
+            transition: bottom 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lion-up { bottom: 30vh !important; } /* Jumps up into the middle of the screen */
+        
         .lion-img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
         .mouth-on .img-1 { animation: swap 0.4s infinite; }
         .mouth-on .img-2 { animation: swap 0.4s infinite reverse; }
         @keyframes swap { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
         /* 4. UI PANEL */
-        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
         .btn { 
             width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; 
             border-radius: 15px; font-weight: bold; font-size: 18px; background: white; 
-            box-shadow: 0 5px 0 #5D4037; transition: 0.1s; position: relative; overflow: hidden;
+            box-shadow: 0 5px 0 #5D4037; transition: 0.1s; position: relative;
         }
         
-        /* The Blue "Telegraph" State */
-        .btn.selected { background: #A2D2FF !important; color: white; transform: translateY(3px); box-shadow: 0 2px 0 #5D4037 !important; }
-        .btn.correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; box-shadow: 0 5px 0 #2D6A4F !important; }
+        .btn.selected { background: #A2D2FF !important; transform: translateY(3px); box-shadow: 0 2px 0 #5D4037 !important; }
+        .btn.correct { background: #B9FBC0 !important; border-color: #2D6A4F !important; }
         .btn.wrong { background: #FFADAD !important; animation: shake 0.4s; }
         @keyframes shake { 0%, 100% { transform:translateX(0); } 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
     </style>
@@ -82,7 +89,7 @@
             <button class="btn" onclick="init()">START GAME</button>
         </div>
         <div id="game-area" style="display:none">
-            <h2 id="question" style="margin-bottom:20px;">Question?</h2>
+            <h2 id="question">Question?</h2>
             <div id="options"></div>
         </div>
     </div>
@@ -102,8 +109,9 @@
         document.getElementById('game-area').style.display = 'block';
         try {
             const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
-            document.getElementById('v').srcObject = s;
-            document.getElementById('v').play();
+            const v = document.getElementById('v');
+            v.srcObject = s;
+            v.play();
             loadQ();
         } catch(e) { loadQ(); }
     }
@@ -122,13 +130,9 @@
     }
 
     function handle(btn, choice, right) {
-        // Prevent double clicking
         document.querySelectorAll('.btn').forEach(b => b.style.pointerEvents = 'none');
-        
-        // 1. Telegraphing: Turn blue immediately
         btn.classList.add('selected');
 
-        // 2. Delay for suspense
         setTimeout(() => {
             btn.classList.remove('selected');
             if(choice === right) {
@@ -154,7 +158,7 @@
         for(let i=0; i<wins; i++) {
             const w = document.createElement('div');
             w.className = 'lion-wrap mouth-on';
-            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 65px)`;
+            w.style.left = `calc(${(100/(wins+1))*(i+1)}% - 80px)`;
             w.innerHTML = `<img src="lion-1.png" class="lion-img img-1" style="opacity:1"><img src="lion-2.png" class="lion-img img-2">`;
             stage.appendChild(w);
             setTimeout(() => w.classList.add('lion-up'), 100);
@@ -169,7 +173,7 @@
                     document.getElementById('question').innerText = "Winner! 🏆";
                     document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">REPLAY</button>';
                 }
-            }, 600);
+            }, 700);
         }, 3000);
     }
 
