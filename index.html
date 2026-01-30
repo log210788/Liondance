@@ -6,7 +6,7 @@
     <style>
         body { margin:0; background:#FFF5E1; font-family:sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
-        /* THE CAMERA BOX */
+        /* 1. TOP CAMERA CIRCLE */
         #top-zone { width: 100%; height: 45vh; display: flex; justify-content: center; align-items: center; position: relative; }
         #camera-circle {
             width: 240px; height: 240px;
@@ -16,12 +16,12 @@
         }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* UI PANEL */
+        /* 2. UI PANEL */
         .ui-panel { flex: 1; background: white; border-radius: 40px 40px 0 0; padding: 25px; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .btn { width: 100%; padding: 18px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: #FFF; box-shadow: 0 5px 0 #5D4037; }
+        .btn { width: 100%; padding: 20px; margin-bottom: 12px; border: 3px solid #5D4037; border-radius: 15px; font-weight: bold; font-size: 18px; background: #FFF; box-shadow: 0 5px 0 #5D4037; }
         
+        /* HIDDEN BY DEFAULT */
         #game-area { display: none; }
-        h1 { font-size: 22px; color: #5D4037; }
     </style>
 </head>
 <body>
@@ -35,69 +35,46 @@
     <div class="ui-panel">
         <div id="start-screen">
             <h1>Lion Dance Game</h1>
-            <p>Tap to start your camera and play!</p>
-            <button class="btn" onclick="runEverything()">START GAME</button>
+            <p>Tap to start your camera and the parade!</p>
+            <button class="btn" onclick="startEverything()">START GAME</button>
         </div>
 
         <div id="game-area">
-            <h2 id="question">Loading...</h2>
-            <div id="options"></div>
+            <h2 id="q-text">Are you ready?</h2>
+            <div id="options">
+                <button class="btn" onclick="next()">YES! 🦁</button>
+            </div>
         </div>
     </div>
 
 <script>
-    // Game Data
-    const quiz = [
-        {q: "Where are you playing?", a: ["Hanoi", "Da Nang"], c: 1},
-        {q: "Is this a Lion Dance?", a: ["Yes", "No"], c: 0}
-    ];
-    let currentIdx = 0;
+    // Variables
+    const video = document.getElementById('v');
+    const startScreen = document.getElementById('start-screen');
+    const gameArea = document.getElementById('game-area');
 
-    async function runEverything() {
-        // 1. Start Camera
+    async function startEverything() {
+        // Step 1: Force the UI to change immediately so we know the button worked
+        startScreen.style.display = 'none';
+        gameArea.style.display = 'block';
+
+        // Step 2: Request Camera
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            const video = document.getElementById('v');
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" } 
+            });
             video.srcObject = stream;
-            await video.play();
+            // Explicit play for Safari
+            video.play();
         } catch (err) {
-            console.log("Camera error:", err);
-            alert("Please allow camera access!");
+            console.error(err);
+            alert("Camera needed for the game!");
         }
-
-        // 2. Switch Screens
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('game-area').style.display = 'block';
-
-        // 3. Load First Question
-        showQuestion();
     }
 
-    function showQuestion() {
-        const item = quiz[currentIdx];
-        document.getElementById('question').innerText = item.q;
-        const btnZone = document.getElementById('options');
-        btnZone.innerHTML = '';
-
-        item.a.forEach((text, i) => {
-            const b = document.createElement('button');
-            b.className = 'btn';
-            b.innerText = text;
-            b.onclick = () => {
-                if(i === item.c) {
-                    currentIdx++;
-                    if(currentIdx < quiz.length) {
-                        showQuestion();
-                    } else {
-                        document.getElementById('question').innerText = "You Won! 🦁";
-                        btnZone.innerHTML = '';
-                    }
-                } else {
-                    alert("Try again!");
-                }
-            };
-            btnZone.appendChild(b);
-        });
+    function next() {
+        document.getElementById('q-text').innerText = "Look at the camera and dance!";
+        document.getElementById('options').innerHTML = '<button class="btn" onclick="location.reload()">RESTART</button>';
     }
 </script>
 </body>
