@@ -144,7 +144,7 @@
         }
 
         .lion-up {
-            transform: translate(-50%, -55vh) scale(1.4) !important;
+            transform: translate(-50%, -30vh) scale(1.4) !important;
         }
 
         .lion-img {
@@ -303,7 +303,7 @@
             document.getElementById('v').srcObject = stream;
         } catch(e) {}
 
-        input.focus();
+        setTimeout(() => input.focus(), 0);
         loadNext();
     }
 
@@ -331,7 +331,7 @@
                 input.style.animation = '';
                 currentIdx++;
                 loadNext();
-                input.focus();
+                setTimeout(() => input.focus(), 0);
             }, 1200);
         }
     });
@@ -449,4 +449,3 @@
 </script>
 </body>
 </html>
-``` }
