@@ -144,7 +144,7 @@
         }
 
         .lion-up {
-            transform: translate(-50%, -30vh) scale(1.4) !important;
+            transform: translate(-50%, -20vh) scale(1.4) !important;
         }
 
         .lion-img {
@@ -303,7 +303,10 @@
             document.getElementById('v').srcObject = stream;
         } catch(e) {}
 
-        setTimeout(() => input.focus(), 0);
+        setTimeout(() => {
+            input.focus();
+            input.click(); // Simulate touch to force keyboard
+        }, 100);
         loadNext();
     }
 
@@ -331,7 +334,10 @@
                 input.style.animation = '';
                 currentIdx++;
                 loadNext();
-                setTimeout(() => input.focus(), 0);
+                setTimeout(() => {
+                    input.focus();
+                    input.click(); // Simulate touch to force keyboard
+                }, 100);
             }, 1200);
         }
     });
@@ -449,3 +455,4 @@
 </script>
 </body>
 </html>
+```</p
