@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Thử Thách Bộ Phận Cơ Thể Tiếng Việt</title>
+    <link rel="manifest" href="/manifest.json"> <!-- Add manifest.json to your repo root -->
     <style>
         :root {
             --red: #FF0000;    /* Tết red */
@@ -298,6 +299,13 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-area').style.display = 'block';
         
+        // Request fullscreen (works on Android; iOS needs PWA from home screen)
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => console.warn('Fullscreen not supported:', err));
+        } else if (document.documentElement.webkitRequestFullscreen) { // For iOS Safari (limited)
+            document.documentElement.webkitRequestFullscreen();
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             document.getElementById('v').srcObject = stream;
@@ -455,4 +463,3 @@
 </script>
 </body>
 </html>
-```</p
