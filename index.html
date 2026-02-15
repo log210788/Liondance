@@ -1,120 +1,215 @@
-<div class="table-number">
-    <h2>Số Bàn</h2>
-    <input type="text" placeholder="Vui lòng ghi số bàn của bạn">
-</div>
-
-<h2>Đồ Uống</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Tên Món</th>
-            <th>Giá (VND)</th>
-            <th class="quantity">Số Lượng</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Sữa chua dâu đá</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Sữa chua dâu</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Sữa chua xoài</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Sữa tươi Trân Châu đường đen</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Cà phê</td>
-            <td>30.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Matcha</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Trà sữa</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Trà đào</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Trà chanh</td>
-            <td>30.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Nước chanh</td>
-            <td>30.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Nước cam</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Nước ép dưa hấu</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Cacao</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Milo</td>
-            <td>40.000</td>
-            <td class="quantity"></td>
-        </tr>
-    </tbody>
-</table>
-
-<h2>Món Ăn Nhẹ</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Tên Món</th>
-            <th>Giá (VND)</th>
-            <th class="quantity">Số Lượng</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Hướng dương</td>
-            <td>15.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Bò khô, Gà khô</td>
-            <td>25.000</td>
-            <td class="quantity"></td>
-        </tr>
-        <tr>
-            <td>Cá chiên vàng</td>
-            <td>100.000 / dĩa</td>
-            <td class="quantity"></td>
-        </tr>
-    </tbody>
-</table>
-
-<div class="notes">
-    <h2>Ghi Chú</h2>
-    <textarea placeholder="Vui lòng ghi chú thêm ở đây (ví dụ: không đá, ít đường, v.v.)"></textarea>
-</div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực Đơn Lunar Cafe</title>
+    <style>
+        @page {
+            size: A3 portrait;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: black;
+        }
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        h3 {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 24px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .quantity {
+            width: 100px;
+            text-align: center;
+        }
+        .notes {
+            margin-top: 40px;
+        }
+        .notes textarea {
+            width: 100%;
+            height: 150px;
+            border: 1px solid black;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .table-number {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .table-number input {
+            width: 200px;
+            font-size: 20px;
+            padding: 10px;
+            border: 1px solid black;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .notes textarea {
+                border: none;
+                background-image: linear-gradient(black 1px, transparent 1px);
+                background-size: 100% 20px;
+                line-height: 20px;
+            }
+            .table-number input {
+                border: none;
+                border-bottom: 1px solid black;
+                background: transparent;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Thực Đơn Lunar Cafe</h1>
+    <h3>Hotline: 094.561.5978</h3>
+    
+    <div class="table-number">
+        <h2>Số Bàn</h2>
+        <input type="text" placeholder="Vui lòng ghi số bàn của bạn">
+    </div>
+    
+    <h2>Đồ Uống</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tên Món</th>
+                <th>Giá (VND)</th>
+                <th class="quantity">Số Lượng</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sữa chua dâu đá</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Sữa chua dâu</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Sữa chua xoài</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Sữa tươi Trân Châu đường đen</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Cà phê</td>
+                <td>30.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Matcha</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Trà sữa</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Trà đào</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Trà chanh</td>
+                <td>30.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Nước chanh</td>
+                <td>30.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Nước cam</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Nước ép dưa hấu</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Cacao</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Milo</td>
+                <td>40.000</td>
+                <td class="quantity"></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Món Ăn Nhẹ</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tên Món</th>
+                <th>Giá (VND)</th>
+                <th class="quantity">Số Lượng</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Hướng dương</td>
+                <td>15.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Bò khô, Gà khô</td>
+                <td>25.000</td>
+                <td class="quantity"></td>
+            </tr>
+            <tr>
+                <td>Cá chiên vàng</td>
+                <td>100.000 / dĩa</td>
+                <td class="quantity"></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="notes">
+        <h2>Ghi Chú</h2>
+        <textarea placeholder="Vui lòng ghi chú thêm ở đây (ví dụ: không đá, ít đường, v.v.)"></textarea>
+    </div>
+</body>
+</html>
