@@ -59,15 +59,18 @@
             padding: 10px;
             font-size: 16px;
         }
-        .table-number {
+        .table-number, .add-on-order, .order-time, .server-name {
             margin-bottom: 20px;
             text-align: center;
         }
-        .table-number input {
+        .table-number input, .order-time input, .server-name input {
             width: 200px;
             font-size: 20px;
             padding: 10px;
             border: 1px solid black;
+        }
+        .add-on-order label {
+            font-size: 20px;
         }
         @media print {
             body {
@@ -79,7 +82,7 @@
                 background-size: 100% 20px;
                 line-height: 20px;
             }
-            .table-number input {
+            .table-number input, .order-time input, .server-name input {
                 border: none;
                 border-bottom: 1px solid black;
                 background: transparent;
@@ -94,6 +97,21 @@
     <div class="table-number">
         <h2>Số Bàn</h2>
         <input type="text" placeholder="Vui lòng ghi số bàn của bạn">
+    </div>
+    
+    <div class="add-on-order">
+        <h2>Là Đơn Hàng Bổ Sung?</h2>
+        <label><input type="checkbox"> Có</label>
+    </div>
+    
+    <div class="order-time">
+        <h2>Thời Gian</h2>
+        <input type="text" placeholder="Vui lòng ghi thời gian đặt hàng">
+    </div>
+    
+    <div class="server-name">
+        <h2>Tên Nhân Viên Phục Vụ</h2>
+        <input type="text" placeholder="Vui lòng ghi tên nhân viên">
     </div>
     
     <h2>Đồ Uống</h2>
